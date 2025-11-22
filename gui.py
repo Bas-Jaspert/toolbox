@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import geemap.foliumap as geemap
 import ee
+import tempfile
 from utils import get_aoi_from_nuts, get_species_data, get_layer_information, get_layer_visualization_params
 
 
@@ -93,6 +94,7 @@ if st.button("Click me"):
 if __name__ == "__main__":
 
     pass
+
 
 
 
