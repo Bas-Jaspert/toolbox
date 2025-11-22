@@ -162,8 +162,8 @@ def remove_duplicates(data, grain_size, aoi):
     return rand_point_vals.distinct("random")
 
 def get_aoi_from_nuts(country_code:str = "AT", county_name:str=None):
-    NUTS_0 = gpd.read_file(r"assets\ref-nuts-2024-01m.geojson\NUTS_RG_01M_2024_4326_LEVL_0.geojson")
-    NUTS_2 = gpd.read_file(r"assets\ref-nuts-2024-01m.geojson\NUTS_RG_01M_2024_4326_LEVL_2.geojson")
+    NUTS_0 = gpd.read_file(r"./assets/NUTS_RG_01M_2024_4326_LEVL_0.geojson")
+    NUTS_2 = gpd.read_file(r"./assets/NUTS_RG_01M_2024_4326_LEVL_2.geojson")
     country = geemap.gdf_to_ee(NUTS_0.loc[NUTS_0.CNTR_CODE==country_code])
     if county_name:
         county = geemap.gdf_to_ee(NUTS_2.loc[NUTS_2.NUTS_NAME==county_name])  
@@ -224,5 +224,6 @@ def get_layer_visualization_params(layer_name: str):
         "eastness": {"min": -1, "max": 1, "palette": cm.palettes['coolwarm']}
     }
     return vis_params.get(layer_name, {})
+
 
 
