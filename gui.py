@@ -9,7 +9,7 @@ from utils import get_aoi_from_nuts, get_species_data, get_layer_information, ge
 
 st.set_page_config(layout="wide")
 service_account = os.environ["EE_SERVICE_ACCOUNT"]
-private_key = json.loads(os.environ["EE_PRIVATE_KEY"])
+private_key = toml.loads(os.environ["EE_PRIVATE_KEY"])
 
 credentials = ee.ServiceAccountCredentials(service_account, private_key)
 ee.Initialize(credentials)
@@ -87,5 +87,6 @@ if st.button("Click me"):
 if __name__ == "__main__":
 
     pass
+
 
 
