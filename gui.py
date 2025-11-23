@@ -10,11 +10,11 @@ import tempfile
 from utils import load_background_data, get_layer_information, get_aoi_from_nuts, get_species_data, get_layer_visualization_params, plot_correlation_heatmap, compute_sdm, plot_hier_clustering, initialize_gee, classify_image_aoi
 
 @st.cache_data
-def load_map_layer(country_code):
+def load_map_layer(layers, country_code):
     Map = geemap.foliumap.Map()
     Map.add_basemap("SATELLITE")
     for key, value in st.session_state.layer.items():
-        if key in st.session_state.layers_select:
+        if key in layers:
             Map.addLayer(value.clip(country_aoi), get_layer_visualization_params(key), key, opacity=.5) 
             Map.addLayer(ee.Image().byte().paint(featureCollection=country_aoi, color=1, width=2), {'palette': 'FF0000'}, "Country AOI", opacity=1)
             Map.centerObject(country_aoi, 6)
@@ -59,11 +59,11 @@ with sdm_tab:
             st.multiselect(
                     "Select Environmental Features",
                     options=list(st.session_state.layer.keys()),
-                    default=['NDVI', 'aspect', 'b1', 'b12', 'CHM', 'GHMI', 'NARI', 'northness'],
+                    default=["landcover", "GHMI", "CHM"],
                     key="layers_select"
                 )
             if st.form_submit_button("Update Layers"):
-                Map = load_map_layer(st.session_state.country_input)
+                Map = load_map_layer(st.session_state.layers_select, st.session_state.country_input)
         
         
     with st.expander("SDM Settings", expanded=False):
@@ -111,7 +111,7 @@ with sdm_tab:
     
     with st.expander("Map View", expanded=True):
         if "country_input" in st.session_state:
-            Map = load_map_layer(st.session_state.country_input)
+            Map = load_map_layer(st.session_state.layers_select, st.session_state.country_input)
             if "classified_img_pr" in st.session_state:
                 Map.addLayer(st.session_state.classified_img_pr, {'min': 0, 'max': 1, 'palette': geemap.colormaps.palettes.viridis_r}, 'Habitat suitability')
                 Map.add_colorbar({'min': 0, 'max': 1, 'palette': geemap.colormaps.palettes.viridis_r}, label="Habitat suitability",
