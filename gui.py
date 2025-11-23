@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+from io import StringIO
 import geemap.foliumap as geemap
 import geemap.colormaps as cm
 import pandas as pd
