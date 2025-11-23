@@ -93,18 +93,18 @@ with sdm_tab:
             st.write(f"Selected features: {list(selected_features)}")
     
     with st.expander("Map View", expanded=True):
-        Map = geemap.foliumap.Map()
-        Map.add_basemap("SATELLITE")
+        st.session_state.Map = geemap.foliumap.Map()
+        st.session_state.Map.add_basemap("SATELLITE")
         for key, value in st.session_state.layer.items():
             if key in st.session_state.features_select:
-                Map.addLayer(value.clip(country_aoi), get_layer_visualization_params(key), key, opacity=.5) 
-                Map.addLayer(ee.Image().byte().paint(featureCollection=country_aoi, color=1, width=2), {'palette': 'FF0000'}, "Country AOI", opacity=1)
-                Map.centerObject(country_aoi, 6)
+                st.session_state.Map.addLayer(value.clip(country_aoi), get_layer_visualization_params(key), key, opacity=.5) 
+                st.session_state.Map.addLayer(ee.Image().byte().paint(featureCollection=country_aoi, color=1, width=2), {'palette': 'FF0000'}, "Country AOI", opacity=1)
+                st.session_state.Map.centerObject(country_aoi, 6)
         if "classified_img_pr" in st.session_state:
-            Map.addLayer(st.session_state.classified_img_pr, {'min': 0, 'max': 1, 'palette': geemap.colormaps.palettes.viridis_r}, 'Habitat suitability')
+            st.session_state.Map.addLayer(st.session_state.classified_img_pr, {'min': 0, 'max': 1, 'palette': geemap.colormaps.palettes.viridis_r}, 'Habitat suitability')
         if st.session_state.species_gdf is not None:
-            Map.addLayer(geemap.gdf_to_ee(st.session_state.species_gdf), {'color':'red'}, "Species Observations", shown=True)
-            Map.addLayer(geemap.gdf_to_ee(st.session_state.background_gdf), {'color':'blue'}, "Background data", shown=False)
+            st.session_state.Map.addLayer(geemap.gdf_to_ee(st.session_state.species_gdf), {'color':'red'}, "Species Observations", shown=True)
+            st.session_state.Map.addLayer(geemap.gdf_to_ee(st.session_state.background_gdf), {'color':'blue'}, "Background data", shown=False)
         if st.button("Show SDM Prediction") and "rf" in st.session_state:
             # if "classified_img_pr" in st.session_state:
             #     del st.session_state.classified_img_pr
@@ -120,7 +120,7 @@ with sdm_tab:
         else:
             st.error("Run the SDM first to see the prediction.")
         
-        Map.to_streamlit()
+        st.session_state.Map.to_streamlit()
 
     
         
