@@ -437,3 +437,16 @@ def plot_hier_clustering(dataframe):
     
     
     return fig, selected_features_names
+
+def get_index_info():
+    index_info = {
+        "landcover": "Land Cover (CLC) Datensätze werden im Rahmen des europäischen Erdbeobachtungsprogramms Copernicus von der Europäischen Umweltagentur (EEA) bereitgestellt. Das Projekt dient der flächendeckenden Erfassung, Klassifizierung und Harmonisierung von Landbedeckungs- und Landnutzungsdaten innerhalb Europas.Der Datensatz weist eine Mindestkartiereinheit von 25 ha und eine thematische Genauigkeit von mindestens 85 % auf. Die Klassifikation erfolgt nach einem hierarchisch aufgebauten System mit 44 Landbedeckungsklassen, die in fünf Hauptkategorien gegliedert sind: künstliche Flächen, landwirtschaftliche Flächen, Wälder und naturnahe Flächen, Feuchtgebiete sowie Gewässer.",
+        "GHMI": "Global Human Modification Index quantifies the extent of human modification.",
+        "NDVI": "Einer der bekanntesten Vegetationindizes, welcher sich aus dem Quotienten der Differenz und der Summe des Nahinfrarot und rot Bandes, also der reflektierten Strahlung zwischen 700 bis 1100 nm für Nahinfrarot und 400 bis 700 nm für Rot berechnet:\n $NDVI=\\frac{NIR-R}{NIR+R}$",
+        "NARI": "Normalized Anthoyanin Reflectance Index (NARI), welcher sensitiv auf den Anthocyanin Gehalt der Vegetationsdecke reagiert:\n $NARI=\\frac{\\frac{1}{G}-\\frac{1}{Red Edge 1}}{\\frac{1}{G}+\\frac{1}{Red Edge 1}}$.",
+        "NCRI": "Normalized Chlorophyll Refelectance Index (NCRI), welcher Informationen über den Chlorophyll Gehalt erfasst: \n $NARI=\\frac{\\frac{1}{G}-\\frac{1}{Red Edge 1}}{\\frac{1}{G}+\\frac{1}{Red Edge 1}}$.",
+        "CHM": "Canopy Height Model (CHM) stellt die Höhe der Vegetationsdecke über dem Boden dar und wird durch die Differenz zwischen dem Digitalen Oberflächenmodell (DOM) und dem Digitalen Geländemodell (DGM) berechnet: \n $CHM = DOM - DGM$.",
+        "Trees": "Abwandlung des CHM, welche nur Baumhöhen über 1 Meter berücksichtigt und in trees (1) und no-trees (0) klassifiziert.",
+    }
+    
+    return index_info
