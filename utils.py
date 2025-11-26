@@ -290,9 +290,17 @@ def load_background_data(path=r"./assets/background_data.csv"):
     bg_gdf = gpd.GeoDataFrame(bg_df.drop(['.geo'], axis=1), geometry=geoms, crs='epsg:4326')
     
     return bg_gdf
+
+@st.cache_data
+def get_species_features(_species_gdf: gpd.GeoDataFrame=None, features: list=None, _layer: dict=None):
+    if _layer is None and features is None:
+        raise ValueError(" 'layer' and 'features' must be provided.")
+    else:
+        predictors = ee.Image.cat([_layer[feature] for feature in features])
+        presence_gdf = geemap.ee_to_gdf(predictors.sampleRegions(collection=geemap.gdf_to_ee(_species_gdf), geometries=True))
+        return presence_gdf, predictors
     
-    
-def compute_sdm(species_gdf: gpd.GeoDataFrame=None, features: list=None, model_type: str="Random Forest", n_trees: int=100, tree_depth: int=5, train_size: float=0.7, year: int=2024):
+def compute_sdm(presence: gpd.GeoDataFrame=None, background: gpd.GeoDataFrame=None, features: list=None, model_type: str="Random Forest", n_trees: int=100, tree_depth: int=5, train_size: float=0.7):
     """Trains a sdm.
 
     Args:
@@ -315,21 +323,17 @@ def compute_sdm(species_gdf: gpd.GeoDataFrame=None, features: list=None, model_t
     from sklearn.model_selection import train_test_split, KFold, StratifiedKFold, StratifiedShuffleSplit, cross_val_score, GridSearchCV
     from sklearn.feature_selection import RFE, RFECV, SelectFromModel
     
-    if model_type== "Maxent":
-        background_gdf = load_background_data()[features+['geometry']]
-    else:
-        background_gdf = load_background_data()[features+['geometry']].sample(n=species_gdf.shape[0], axis=0)
-    layer = get_layer_information(year)
-    
-    predictors = ee.Image.cat([layer[feature] for feature in features])
-    presence_gdf = geemap.ee_to_gdf(predictors.sampleRegions(collection=geemap.gdf_to_ee(species_gdf), geometries=True))
-    
-    background_gdf['PresAbs'] = 0
-    presence_gdf['PresAbs'] = 1   
-    
-    presence_gdf = presence_gdf[background_gdf.columns]
+    # if model_type== "Maxent" & (backgrund_gdf is None):
+    #     background_gdf = load_background_data()[features+['geometry']]
+    # else:
+    #     background_gdf = load_background_data()[features+['geometry']].sample(n=species_gdf.shape[0], axis=0)
+    background = background[features+['geometry']].copy().sample(n=presence.shape[0], axis=0)
 
-    ml_gdf = pd.concat([background_gdf, presence_gdf], axis=0).reset_index(drop=True)
+    background['PresAbs'] = 0
+    presence['PresAbs'] = 1   
+    presence = presence[background.columns]
+
+    ml_gdf = pd.concat([background, presence], axis=0).reset_index(drop=True)
     ml_gdf.columns = [_.replace(' ','_') for _ in ml_gdf.columns]
 
     y = ml_gdf['PresAbs']
@@ -359,7 +363,7 @@ def compute_sdm(species_gdf: gpd.GeoDataFrame=None, features: list=None, model_t
     # PartialDependenceDisplay.from_estimator(
     #     rf, X_train, features=X.columns.to_list(), kind='average', ax=ax
     # )
-    return model, results_df, ml_gdf, predictors
+    return model, results_df, ml_gdf
 
 def classify_image_aoi(image, aoi, ml_gdf, model, features):
     # if "classified_img_pr" in st.session_state:
@@ -442,10 +446,10 @@ def get_index_info():
     index_info = {
         "landcover": "Land Cover (CLC) Datensätze werden im Rahmen des europäischen Erdbeobachtungsprogramms Copernicus von der Europäischen Umweltagentur (EEA) bereitgestellt. Das Projekt dient der flächendeckenden Erfassung, Klassifizierung und Harmonisierung von Landbedeckungs- und Landnutzungsdaten innerhalb Europas.Der Datensatz weist eine Mindestkartiereinheit von 25 ha und eine thematische Genauigkeit von mindestens 85 % auf. Die Klassifikation erfolgt nach einem hierarchisch aufgebauten System mit 44 Landbedeckungsklassen, die in fünf Hauptkategorien gegliedert sind: künstliche Flächen, landwirtschaftliche Flächen, Wälder und naturnahe Flächen, Feuchtgebiete sowie Gewässer.",
         "GHMI": "Global Human Modification Index quantifies the extent of human modification.",
-        "NDVI": "Einer der bekanntesten Vegetationindizes, welcher sich aus dem Quotienten der Differenz und der Summe des Nahinfrarot und rot Bandes, also der reflektierten Strahlung zwischen 700 bis 1100 nm für Nahinfrarot und 400 bis 700 nm für Rot berechnet:  \ $NDVI=\\frac{NIR-R}{NIR+R}$",
-        "NARI": "Normalized Anthoyanin Reflectance Index (NARI), welcher sensitiv auf den Anthocyanin Gehalt der Vegetationsdecke reagiert:  \ $NARI=\\frac{\\frac{1}{G}-\\frac{1}{Red Edge 1}}{\\frac{1}{G}+\\frac{1}{Red Edge 1}}$.",
+        "NDVI": "Einer der bekanntesten Vegetationindizes, welcher sich aus dem Quotienten der Differenz und der Summe des Nahinfrarot und rot Bandes, also der reflektierten Strahlung zwischen 700 bis 1100 nm für Nahinfrarot und 400 bis 700 nm für Rot berechnet:   $NDVI=\\frac{NIR-R}{NIR+R}$",
+        "NARI": "Normalized Anthoyanin Reflectance Index (NARI), welcher sensitiv auf den Anthocyanin Gehalt der Vegetationsdecke reagiert:   $NARI=\\frac{\\frac{1}{G}-\\frac{1}{Red Edge 1}}{\\frac{1}{G}+\\frac{1}{Red Edge 1}}$.",
         "NCRI": "Normalized Chlorophyll Refelectance Index (NCRI), welcher Informationen über den Chlorophyll Gehalt erfasst: $NCRI=\\frac{\\frac{1}{Red Edge 1}-\\frac{1}{Red Edge 3}}{\\frac{1}{Red Edge 1}+\\frac{1}{Red Edge 3}}$.",
-        "CHM": "Canopy Height Model (CHM) stellt die Höhe der Vegetationsdecke über dem Boden dar und wird durch die Differenz zwischen dem Digitalen Oberflächenmodell (DOM) und dem Digitalen Geländemodell (DGM) berechnet:  \ $CHM = DOM - DGM$.",
+        "CHM": "Canopy Height Model (CHM) stellt die Höhe der Vegetationsdecke über dem Boden dar und wird durch die Differenz zwischen dem Digitalen Oberflächenmodell (DOM) und dem Digitalen Geländemodell (DGM) berechnet:   $CHM = DOM - DGM$.",
         "Trees": "Abwandlung des CHM, welche nur Baumhöhen über 1 Meter berücksichtigt und in trees (1) und no-trees (0) klassifiziert.",
     }
     

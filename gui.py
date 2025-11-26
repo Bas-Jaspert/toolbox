@@ -7,7 +7,7 @@ import pandas as pd
 import geopandas as gpd
 import ee
 import tempfile
-from utils import load_background_data, get_layer_information, get_aoi_from_nuts, get_species_data, get_layer_visualization_params, plot_correlation_heatmap, compute_sdm, plot_hier_clustering, initialize_gee, classify_image_aoi, get_index_info
+from utils import load_background_data, get_layer_information, get_aoi_from_nuts, get_species_data, get_layer_visualization_params, plot_correlation_heatmap, compute_sdm, plot_hier_clustering, initialize_gee, classify_image_aoi, get_index_info, get_species_features
 
 @st.cache_data
 def load_map_layer(layers, country_code):
@@ -91,16 +91,18 @@ with sdm_tab:
                     )
                     
                     if st.form_submit_button("Run SDM"):
+                        st.session_state.presence_gdf, st.session_state.predictors = get_species_features(_species_gdf=st.session_state.species_gdf, features=list(st.session_state.features_select), _layer=st.session_state.layer)
+                        
                         with st.spinner("Running SDM..."):
-                            st.session_state.model, st.session_state.results_df, st.session_state.ml_gdf, st.session_state.predictors= compute_sdm(
-                                                                                                                                species_gdf=st.session_state.species_gdf,
-                                                                                                                                features=list(st.session_state.features_select),
-                                                                                                                                model_type=st.session_state.model_input, 
-                                                                                                                                n_trees=st.session_state.n_trees_input, 
-                                                                                                                                tree_depth=st.session_state.tree_depth_input, 
-                                                                                                                                train_size=st.session_state.train_size_input/100, 
-                                                                                                                                year=st.session_state.year_input
-                                                                                                                                )
+                            st.session_state.model, st.session_state.results_df, st.session_state.ml_gdf = compute_sdm(
+                                                                                                                        presence=st.session_state.presence_gdf,
+                                                                                                                        background=st.session_state.background_gdf,
+                                                                                                                        features=list(st.session_state.features_select),
+                                                                                                                        model_type=st.session_state.model_input, 
+                                                                                                                        n_trees=st.session_state.n_trees_input, 
+                                                                                                                        tree_depth=st.session_state.tree_depth_input, 
+                                                                                                                        train_size=st.session_state.train_size_input/100, 
+                                                                                                                        )
                                         
                             st.success("SDM run completed. Results are displayed on the map below.")
                             try:
